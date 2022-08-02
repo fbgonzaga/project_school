@@ -65,7 +65,7 @@ Assuming you have already installed and configured:
  - MariaDB
 
 1. Create the school schema.
-2. create the user school_admin.
+2. Create the user school_admin.
 3. Grant privileges for the school_admin user on the school schema.
 
 `CREATE DATABASE school;`
