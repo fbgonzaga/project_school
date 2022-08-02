@@ -76,7 +76,7 @@ Assuming you have already installed and configured:
 
 `GRANT ALL PRIVILEGES ON school.* TO 'school_admin'@localhost IDENTIFIED BY 'school_admin';`
 
-You are now ready do execute the application using your JAVA IDE. :)
+You are now ready do execute the application using your JAVA IDE.
 
 ## Acknowledgements ##
 
