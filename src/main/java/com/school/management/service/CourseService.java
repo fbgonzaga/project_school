@@ -7,7 +7,6 @@ import com.school.management.model.StudentCourse;
 import com.school.management.model.StudentCourseView;
 import com.school.management.model.dto.CourseDto;
 import com.school.management.model.dto.StudentCourseDto;
-import com.school.management.model.dto.StudentDto;
 import com.school.management.repository.CourseRepository;
 import com.school.management.repository.StudentCourseRepository;
 import com.school.management.repository.StudentCourseViewRepository;
@@ -61,9 +60,13 @@ public class CourseService {
 	public CourseDto updateCourse(CourseDto courseDto) {
 		Course course = courseRepository.findById(courseDto.getId()).orElseThrow(() -> new ResponseStatusException(
 			HttpStatus.NOT_FOUND, "Course not found."));
-		course.setName(courseDto.getName());
-		course.setUpdatedAt(Timestamp.from(Instant.now()));
-		course = courseRepository.save(course);
+
+		if (courseDto.getName() != null && !courseDto.getName().isBlank() && !courseDto.getName().equals(course.getName())) {
+			course.setName(courseDto.getName());
+			course.setUpdatedAt(Timestamp.from(Instant.now()));
+			course = courseRepository.save(course);
+		}
+
 		return new CourseDto(course.getId(), course.getName(), course.getCreatedAt(), course.getUpdatedAt());
 	}
 
@@ -103,14 +106,15 @@ public class CourseService {
 				HttpStatus.FORBIDDEN, "A request can not contain more than 50 courses.");
 		}
 		Timestamp ts = Timestamp.from(Instant.now());
-		List<Course> c = courseRepository.saveAll(coursesDto.stream()
+		List<Course> l = courseRepository.saveAll(coursesDto.stream()
+			.filter(c -> c.getName() != null && !c.getName().isBlank())
 			.map(courseDto -> new Course(courseDto.getName(),
 				ts,
 				ts,
 				new HashSet<StudentCourse>()))
 			.collect(Collectors.toList()));
 
-		return c.stream()
+		return l.stream()
 			.map(course -> new CourseDto(course.getId(),
 				course.getName(),
 				course.getCreatedAt(),
@@ -119,24 +123,30 @@ public class CourseService {
 	}
 
 	@Transactional
-	public void deleteAllCourses(Boolean allCourses) {
-		if (allCourses) {
+	public void deleteAllCourses(Boolean confirmDeletion) {
+		if (confirmDeletion) {
 			studentCourseRepository.deleteAll();
 			courseRepository.deleteAll();
 		} else {
 			throw new ResponseStatusException(
 				HttpStatus.NOT_FOUND,
-				"To delete ALL courses and student-course relationships, inform all-courses=true as a query param.");
+				"To delete ALL courses and courses-students relationships, inform confirm-deletion=true as a query param.");
 		}
 	}
 
 	@Transactional
-	public void deleteCourse(Long id) {
-		Course course = courseRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
-			HttpStatus.NOT_FOUND, "Course not found."));
+	public void deleteCourse(Long id, Boolean confirmDeletion) {
+		if (confirmDeletion) {
+			Course course = courseRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND, "Course not found."));
 
-		studentCourseRepository.deleteStudentsByCourse(course);
-		courseRepository.deleteById(id);
+			studentCourseRepository.deleteStudentsByCourse(course);
+			courseRepository.deleteById(id);
+		} else {
+			throw new ResponseStatusException(
+				HttpStatus.NOT_FOUND,
+				"To delete the course and course-students relationships, inform confirm-deletion=true as a query param.");
+		}
 	}
 
 	//--------------------------

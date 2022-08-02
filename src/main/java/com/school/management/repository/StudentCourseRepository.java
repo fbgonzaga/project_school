@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface StudentCourseRepository extends JpaRepository<StudentCourse, StudentCourseKey> {
-
 	@Modifying
 	@Query("DELETE FROM StudentCourse sc " +
 		"WHERE sc.student = :student")
@@ -19,4 +18,8 @@ public interface StudentCourseRepository extends JpaRepository<StudentCourse, St
 	@Query("DELETE FROM StudentCourse sc " +
 		"WHERE sc.course = :course")
 	void deleteStudentsByCourse(Course course);
+
+	@Query("SELECT COUNT(*) FROM StudentCourse sc " +
+		"WHERE sc.course = :course AND sc.student <> :student")
+	int getTotalOtherStudentsByCourse(Course course, Student student);
 }

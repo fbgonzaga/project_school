@@ -5,7 +5,6 @@ import com.school.management.model.Course;
 import com.school.management.model.Student;
 import com.school.management.model.StudentCourse;
 import com.school.management.model.StudentCourseView;
-import com.school.management.model.dto.CourseDto;
 import com.school.management.model.dto.StudentCourseDto;
 import com.school.management.model.dto.StudentDto;
 import com.school.management.repository.CourseRepository;
@@ -62,40 +61,64 @@ public class StudentService {
 	public StudentDto updateStudent(StudentDto studentDto) {
 		Student student = studentRepository.findById(studentDto.getId()).orElseThrow(() -> new ResponseStatusException(
 			HttpStatus.NOT_FOUND, "Student not found."));
-		student.setName(studentDto.getName());
-		student.setAddress(studentDto.getAddress());
-		student.setUpdatedAt(Timestamp.from(Instant.now()));
-		student = studentRepository.save(student);
+
+		Boolean updated = false;
+		if (studentDto.getName() != null && !studentDto.getName().isBlank() && !studentDto.getName().equals(student.getName())) {
+			student.setName(studentDto.getName());
+			updated = true;
+		}
+		if (studentDto.getAddress() != null && !studentDto.getAddress().isBlank() && !studentDto.getAddress().equals(student.getAddress())) {
+			student.setAddress(studentDto.getAddress());
+			updated = true;
+		}
+
+		if (updated) {
+			student.setUpdatedAt(Timestamp.from(Instant.now()));
+			student = studentRepository.save(student);
+		}
+
 		return new StudentDto(student.getId(), student.getName(), student.getAddress(), student.getCreatedAt(), student.getUpdatedAt());
 	}
 
 	@Transactional
 	public List<StudentCourseDto> updateStudentCourses(Long id, List<Long> courseIds) {
+		//Trying to enroll in more than five courses.
 		if (courseIds.size() > 5) {
 			throw new ResponseStatusException(
 				HttpStatus.FORBIDDEN, "A student can not enroll in more than five courses.");
 		}
 
+		//Invalid student id.
 		Student student = studentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
 			HttpStatus.NOT_FOUND, "Student not found."));
 
-		//building the courses list
+		//For each course verifies:
+		//1) Does the Course exist?
+		//2) Considering the student is not enrolled in the course, does the course already has 50 students enrolled?
 		List<StudentCourse> studentCourses = courseIds.stream()
-			.map(courseId -> new StudentCourse(student, courseRepository.findById(courseId).orElseThrow(() -> new ResponseStatusException(
-				HttpStatus.NOT_FOUND, "Course (id "+ courseId +") not found."))))
+			.filter(courseId -> {
+				if (studentCourseRepository
+					.getTotalOtherStudentsByCourse(courseRepository.findById(courseId)
+						.orElseThrow(() -> new ResponseStatusException(
+							HttpStatus.NOT_FOUND, "Course (id " + courseId + ") not found.")), student) >= 50)
+					throw new ResponseStatusException(
+						HttpStatus.FORBIDDEN, "The course (id " + courseId + ") has already 50 students enrolled.");
+				return true;
+			})
+			.map(courseId -> new StudentCourse(student, courseRepository.findById(courseId).get()))
 			.collect(Collectors.toList());
 
 		//updating the student's timestamp
 		student.setUpdatedAt(Timestamp.from(Instant.now()));
 		studentRepository.save(student);
-		//deleting current courses
+		//deleting current student's courses
 		studentCourseRepository.deleteCoursesByStudent(student);
 
 		//saving new courses
 		studentCourses = studentCourseRepository.saveAll(studentCourses);
 
 		return studentCourses.stream()
-			.map(studentCourse -> new StudentCourseDto(studentCourse.getStudent().getId(), studentCourse.getStudent().getName(), studentCourse.getCourse().getId(),studentCourse.getCourse().getName()))
+			.map(studentCourse -> new StudentCourseDto(studentCourse.getStudent().getId(), studentCourse.getStudent().getName(), studentCourse.getCourse().getId(), studentCourse.getCourse().getName()))
 			.collect(Collectors.toList());
 	}
 
@@ -104,8 +127,10 @@ public class StudentService {
 			throw new ResponseStatusException(
 				HttpStatus.FORBIDDEN, "A request can not contain more than 50 students.");
 		}
+
 		Timestamp ts = Timestamp.from(Instant.now());
 		List<Student> l = studentRepository.saveAll(studentsDto.stream()
+			.filter(s -> s.getName() != null && !s.getName().isBlank() && s.getAddress() != null && !s.getAddress().isBlank())
 			.map(studentDto -> new Student(studentDto.getName(),
 				studentDto.getAddress(),
 				ts,
@@ -123,24 +148,31 @@ public class StudentService {
 	}
 
 	@Transactional
-	public void deleteAllStudents(Boolean allStudents) {
-		if (allStudents) {
+	public void deleteAllStudents(Boolean confirmDeletion) {
+		if (confirmDeletion) {
 			studentCourseRepository.deleteAll();
 			studentRepository.deleteAll();
 		} else {
 			throw new ResponseStatusException(
 				HttpStatus.NOT_FOUND,
-				"To delete ALL users and student-course relationships, inform all-students=true as a query param.");
+				"To delete ALL students and students-courses relationships, inform confirm-deletion=true as a query param.");
 		}
 	}
 
 	@Transactional
-	public void deleteStudent(Long id) {
-		Student student = studentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
-			HttpStatus.NOT_FOUND, "Student not found."));
+	public void deleteStudent(Long id, Boolean confirmDeletion) {
+		if (confirmDeletion) {
+			Student student = studentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND, "Student not found."));
+			studentCourseRepository.deleteCoursesByStudent(student);
+			studentRepository.deleteById(id);
+		} else {
+			throw new ResponseStatusException(
+				HttpStatus.NOT_FOUND,
+				"To delete the student and student-courses relationships, inform confirm-deletion=true as a query param.");
+		}
 
-		studentCourseRepository.deleteCoursesByStudent(student);
-		studentRepository.deleteById(id);
+
 	}
 
 	//--------------------------

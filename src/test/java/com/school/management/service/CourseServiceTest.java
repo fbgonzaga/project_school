@@ -26,7 +26,7 @@ class CourseServiceTest {
 	CourseService courseService;
 
 	@Test
-	public void moreThanFiftyCoursesPerRequest(){
+	public void moreThanFiftyCoursesPerRequest() {
 		when(coursesDto.size()).thenReturn(51);
 
 		Assertions.assertThrows(ResponseStatusException.class, () ->
@@ -35,7 +35,7 @@ class CourseServiceTest {
 	}
 
 	@Test
-	public void moreThanFiftyStudentsInCourse(){
+	public void moreThanFiftyStudentsInCourse() {
 		when(studentIds.size()).thenReturn(51);
 
 		Assertions.assertThrows(ResponseStatusException.class, () ->

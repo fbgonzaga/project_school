@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface CourseRepository extends JpaRepository<Course, Long> {
-
 	@Query("SELECT c FROM Course c LEFT JOIN c.studentCourse sc " +
 		"WHERE sc.student = :student")
 	List<Course> getCoursesByStudent(@Param("student") Student student);

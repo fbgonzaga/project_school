@@ -26,9 +26,9 @@ public class CourseController {
 		this.courseService = courseService;
 	}
 
-/**
+	/**
 	 * GET methods (retrieving info)
-	 */
+ 	*/
 
 	/**
 	 * HTTP method: GET
@@ -67,7 +67,6 @@ public class CourseController {
 	}
 
 	/**
-	 *
 	 * @return list of relationships between students and courses, ordered by course and student.
 	 */
 	@GetMapping(value = "/students")
@@ -133,13 +132,13 @@ public class CourseController {
 	/**
 	 * HTTP method: DELETE
 	 *
-	 * @param allCourses = true --> deletes all the courses, and student-courses relations.
-	 *                   The student table will not be modified.  (default: false)
+	 * @param confirmDeletion = true --> deletes all the courses, and student-courses relations.
+	 *                        The student table will not be modified.  (default: false)
 	 */
 	@DeleteMapping(value = "/")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void deleteCourses(@RequestParam(name = "all-courses") Optional<Boolean> allCourses) {
-		courseService.deleteAllCourses(allCourses.orElse(false));
+	public void deleteCourses(@RequestParam(name = "confirm-deletion") Optional<Boolean> confirmDeletion) {
+		courseService.deleteAllCourses(confirmDeletion.orElse(false));
 	}
 
 	/**
@@ -149,7 +148,7 @@ public class CourseController {
 	 */
 	@DeleteMapping(value = "/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void deleteCourse(@PathVariable Long id) {
-		courseService.deleteCourse(id);
+	public void deleteCourse(@PathVariable Long id, @RequestParam(name = "confirm-deletion") Optional<Boolean> confirmDeletion) {
+		courseService.deleteCourse(id, confirmDeletion.orElse(false));
 	}
 }
