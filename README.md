@@ -56,7 +56,7 @@ The application must be available at:
 
 `http://localhost:8080/`
 
-I suggest you use Metadata.io Workspace using Postman. The file to be imported (in JSON format) is available at:
+I suggest you use the Metadata.io Workspace using Postman. The file to be imported (in JSON format) is available at:
 
 [Postman Metadata.io Workspace](https://www.getpostman.com/collections/607f2c3cc23901f0d31e)
 
