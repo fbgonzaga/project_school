@@ -24,11 +24,11 @@ The following tables summarize the available endpoints and HTTP methods for both
 
 **Students:**
 
-![students_tb_img](https://user-images.githubusercontent.com/30641015/182287758-7b75d6a6-c16e-448f-9715-4b74b0d18117.png)
+![students_tb_img](https://user-images.githubusercontent.com/30641015/182293371-6c35b0dc-8e2e-4057-b525-d686c733b466.png)
 
 **Courses:**
 
-![courses_tb_img](https://user-images.githubusercontent.com/30641015/182287871-5ec02e42-9e4d-4707-bb9b-dd4a64ffe406.png)
+![courses_tb_img](https://user-images.githubusercontent.com/30641015/182293389-38e631ee-b877-4c89-aae3-30b73af31b71.png)
 
 ## Complete endpoints documentation ##
 
